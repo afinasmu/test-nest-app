@@ -1,0 +1,25 @@
+# Build stage - Install dependencies
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies (only in builder stage)
+RUN npm install
+
+# Copy the rest of the application code
+COPY . .
+
+# Final image stage - Create a slim image
+FROM node:18-alpine
+
+# Copy only production-ready application code
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app .
+
+# Expose the port where the Nest.js application listens (replace 3000 with your actual port)
+EXPOSE 3000
+
+# Start the Nest.js application using the default command
+CMD [ "npm", "run", "start:dev" ]
